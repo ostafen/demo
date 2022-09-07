@@ -31,15 +31,31 @@ func createDBFileIfNotExists(fileName string) error {
 }
 
 func (s *storeImpl) init() error {
-	createStmt := `CREATE TABLE IF NOT EXISTS event (
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	createTableStmt := `CREATE TABLE IF NOT EXISTS event (
 		"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
 		"type" TEXT NOT NULL,
 		"key" TEXT,
 		"value" TEXT NULL
 	  );`
 
-	_, err := s.db.Exec(createStmt)
-	return err
+	_, err = tx.Exec(createTableStmt)
+	if err != nil {
+		return err
+	}
+
+	// since the table can grow a lot, we create an index on the key field to speed-up search queries
+	createIndexStmt := `CREATE INDEX IF NOT EXISTS key_index ON event(key);`
+	_, err = tx.Exec(createIndexStmt)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func Open(dir string) (EventStore, error) {
