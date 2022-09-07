@@ -187,4 +187,7 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 
 	_, err = c.Get("myKey")
 	require.Error(t, err)
+
+	err = c.Update(answ)
+	require.Error(t, err)
 }
