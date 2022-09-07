@@ -3,6 +3,7 @@ package store_test
 import (
 	"demo/model"
 	"demo/store"
+	"math/rand"
 	"os"
 	"strconv"
 	"testing"
@@ -77,6 +78,66 @@ func TestDeleteAnswer(t *testing.T) {
 
 			_, err = s.GetAnswer("key")
 			require.Equal(t, err, store.ErrAnswerNotExist)
+		}
+	})
+}
+
+func randomEventType() model.EventType {
+	switch rand.Intn(3) {
+	case 0:
+		return model.CreateEvent
+	case 1:
+		return model.UpdateEvent
+	case 2:
+		return model.DeleteEvent
+	}
+	panic("unknown event code")
+}
+
+func TestCreateUpdateAndDelete(t *testing.T) {
+	runTest(t, func(s store.EventStore, t *testing.T) {
+		n := 1000
+
+		keyState := make(map[string]*string)
+
+		for i := 0; i < n; i++ {
+			key := strconv.Itoa(rand.Intn(10))
+
+			evt := randomEventType()
+			switch evt {
+			case model.CreateEvent:
+				value := strconv.Itoa(rand.Int())
+				err := s.Create(&model.Answer{Key: key, Value: value})
+				if keyState[key] == nil {
+					require.NoError(t, err)
+					keyState[key] = &value
+				} else {
+					require.Equal(t, err, store.ErrAnswerExist)
+				}
+			case model.UpdateEvent:
+				value := strconv.Itoa(rand.Int())
+				err := s.Update(&model.Answer{Key: key, Value: value})
+				if keyState[key] != nil {
+					require.NoError(t, err)
+					keyState[key] = &value
+				} else {
+					require.Equal(t, err, store.ErrAnswerNotExist)
+				}
+			case model.DeleteEvent:
+				err := s.Delete(key)
+				if keyState[key] != nil {
+					require.NoError(t, err)
+					keyState[key] = nil
+				} else {
+					require.Equal(t, err, store.ErrAnswerNotExist)
+				}
+			}
+
+			if keyState[key] != nil {
+				a, err := s.GetAnswer(key)
+				require.NoError(t, err)
+				require.Equal(t, a, &model.Answer{Key: key, Value: *keyState[key]})
+			}
 		}
 	})
 }

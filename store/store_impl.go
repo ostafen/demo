@@ -91,6 +91,10 @@ func (s *storeImpl) Update(a *model.Answer) error {
 }
 
 func (s *storeImpl) Delete(key string) error {
+	_, err := s.GetAnswer(key)
+	if err != nil {
+		return err
+	}
 	return s.insertEvent(model.DeleteEvent, &model.Answer{Key: key})
 }
 
