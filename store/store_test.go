@@ -141,3 +141,57 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 		}
 	})
 }
+
+func TestGetHistory(t *testing.T) {
+	runTest(t, func(s store.EventStore, t *testing.T) {
+		n := 1000
+
+		key := "key"
+		err := s.Create(&model.Answer{Key: key, Value: "value"})
+		require.NoError(t, err)
+
+		evts := make([]*model.Event, 0)
+
+		evts = append(evts, &model.Event{Event: model.CreateEvent, Data: &model.Answer{Key: key, Value: "value"}})
+
+		for i := 0; i < n; i++ {
+			switch randomEventType() {
+			case model.CreateEvent:
+				answ := &model.Answer{Key: key, Value: "value"}
+				err := s.Create(answ)
+				if err != store.ErrAnswerExist {
+					require.NoError(t, err)
+					evts = append(evts, &model.Event{Event: model.CreateEvent, Data: answ})
+				}
+
+			case model.UpdateEvent:
+				answ := &model.Answer{Key: key, Value: "value"}
+				err := s.Update(answ)
+				if err != store.ErrAnswerNotExist {
+					require.NoError(t, err)
+					evts = append(evts, &model.Event{Event: model.UpdateEvent, Data: answ})
+				}
+
+			case model.DeleteEvent:
+				answ := &model.Answer{Key: key, Value: ""}
+				err := s.Delete(key)
+				if err != store.ErrAnswerNotExist {
+					require.NoError(t, err)
+					evts = append(evts, &model.Event{Event: model.DeleteEvent, Data: answ})
+				}
+			}
+		}
+
+		it, err := s.GetHistory(key)
+		require.NoError(t, err)
+
+		i := 0
+		for it.Next() {
+			e, err := it.Value()
+			require.NoError(t, err)
+			require.Equal(t, e, evts[i])
+			i++
+		}
+		require.Equal(t, i, len(evts))
+	})
+}

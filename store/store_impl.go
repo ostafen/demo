@@ -135,7 +135,7 @@ func (s *storeImpl) GetAnswer(key string) (*model.Answer, error) {
 
 func (s *storeImpl) GetHistory(key string) (EventIterator, error) {
 	query := `SELECT * FROM event WHERE key = (?) ORDER BY id ASC`
-	rows, err := s.db.Query(query)
+	rows, err := s.db.Query(query, key)
 
 	return &rowIterator{
 		rows: rows,
