@@ -85,6 +85,17 @@ func (c *TestClient) Get(key string) (*model.Answer, error) {
 	return answ, err
 }
 
+func (c *TestClient) GetHistory(key string) ([]*model.Event, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/answers/%s/events", c.conf.Host, key))
+	if err != nil {
+		return nil, err
+	}
+
+	var events []*model.Event
+	err = json.NewDecoder(resp.Body).Decode(&events)
+	return events, err
+}
+
 func (c *TestClient) Delete(key string) error {
 	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/answers/%s", c.conf.Host, key), nil)
 	if err != nil {
@@ -190,4 +201,37 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 
 	err = c.Update(answ)
 	require.Error(t, err)
+}
+
+func TestGetHistory(t *testing.T) {
+	done := setupServer(t)
+	defer done()
+
+	c := New(clientConf)
+
+	createAnsw := &model.Answer{Key: "myKey", Value: "initialValue"}
+	err := c.Create(createAnsw)
+	require.NoError(t, err)
+
+	updateAnsw := &model.Answer{Key: "myKey", Value: "updatedValue"}
+	err = c.Update(updateAnsw)
+	require.NoError(t, err)
+
+	//TODO: Get
+	err = c.Delete(updateAnsw.Key)
+	require.NoError(t, err)
+
+	events, err := c.GetHistory("myKey")
+	require.NoError(t, err)
+
+	require.Len(t, events, 3)
+
+	require.Equal(t, &model.Event{Event: model.CreateEvent, Data: createAnsw}, events[0])
+	require.Equal(t, &model.Event{Event: model.UpdateEvent, Data: updateAnsw}, events[1])
+	require.Equal(t, &model.Event{Event: model.DeleteEvent, Data: &model.Answer{Key: "myKey"}}, events[2])
+
+	events, err = c.GetHistory("myKey1")
+	require.NoError(t, err)
+
+	require.Len(t, events, 0)
 }
