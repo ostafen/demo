@@ -63,14 +63,20 @@ func Open(dir string) (EventStore, error) {
 	return store, err
 }
 
-func (s *storeImpl) insertEvent(t model.EventType, a *model.Answer) error {
+func (s *storeImpl) insertEvent(t model.EventType, a *model.Answer, txn *sql.Tx) error {
 	insertStmt := `INSERT INTO event(type, key, value) VALUES (?, ?, ?)`
-	_, err := s.db.Exec(insertStmt, t, a.Key, a.Value)
+	_, err := txn.Exec(insertStmt, t, a.Key, a.Value)
 	return err
 }
 
 func (s *storeImpl) Create(a *model.Answer) error {
-	_, err := s.GetAnswer(a.Key)
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = s.getAnswer(a.Key, tx)
 	if err == nil {
 		return ErrAnswerExist
 	}
@@ -79,23 +85,46 @@ func (s *storeImpl) Create(a *model.Answer) error {
 		return err
 	}
 
-	return s.insertEvent(model.CreateEvent, a)
+	if err := s.insertEvent(model.CreateEvent, a, tx); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (s *storeImpl) Update(a *model.Answer) error {
-	_, err := s.GetAnswer(a.Key)
+	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
-	return s.insertEvent(model.UpdateEvent, a)
+	defer tx.Rollback()
+
+	_, err = s.getAnswer(a.Key, tx)
+	if err != nil {
+		return err
+	}
+
+	if err := s.insertEvent(model.UpdateEvent, a, tx); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (s *storeImpl) Delete(key string) error {
-	_, err := s.GetAnswer(key)
+	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
-	return s.insertEvent(model.DeleteEvent, &model.Answer{Key: key})
+	defer tx.Rollback()
+
+	_, err = s.getAnswer(key, tx)
+	if err != nil {
+		return err
+	}
+
+	if err := s.insertEvent(model.DeleteEvent, &model.Answer{Key: key}, tx); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func scanEvent[T interface{ Scan(dest ...any) error }](row T) (*model.Event, error) {
@@ -110,8 +139,22 @@ func scanEvent[T interface{ Scan(dest ...any) error }](row T) (*model.Event, err
 }
 
 func (s *storeImpl) GetAnswer(key string) (*model.Answer, error) {
+	txn, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer txn.Rollback()
+
+	answ, err := s.getAnswer(key, txn)
+	if err != nil {
+		return nil, err
+	}
+	return answ, nil
+}
+
+func (s *storeImpl) getAnswer(key string, tx *sql.Tx) (*model.Answer, error) {
 	query := `SELECT * FROM event WHERE key = (?) ORDER BY id DESC LIMIT 1`
-	row := s.db.QueryRow(query, key)
+	row := tx.QueryRow(query, key)
 
 	if row.Err() != nil {
 		return nil, row.Err()
