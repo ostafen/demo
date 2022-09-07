@@ -98,7 +98,7 @@ func (s *storeImpl) Delete(key string) error {
 	return s.insertEvent(model.DeleteEvent, &model.Answer{Key: key})
 }
 
-func scanEvent(row *sql.Row) (*model.Event, error) {
+func scanEvent[T interface{ Scan(dest ...any) error }](row T) (*model.Event, error) {
 	var id int
 	var evtType, key, value string
 
@@ -134,16 +134,22 @@ func (s *storeImpl) GetAnswer(key string) (*model.Answer, error) {
 }
 
 func (s *storeImpl) GetHistory(key string) (EventIterator, error) {
-	return nil, nil
+	query := `SELECT * FROM event WHERE key = (?) ORDER BY id ASC`
+	rows, err := s.db.Query(query)
+
+	return &rowIterator{
+		rows: rows,
+	}, err
 }
 
 type rowIterator struct {
+	rows *sql.Rows
 }
 
 func (it *rowIterator) Next() bool {
-	return false
+	return it.rows.Next()
 }
 
 func (it *rowIterator) Value() (*model.Event, error) {
-	return nil, nil
+	return scanEvent(it.rows)
 }

@@ -12,5 +12,5 @@ type EventStore interface {
 
 type EventIterator interface {
 	Next() bool
-	Value() *model.Answer
+	Value() (*model.Event, error)
 }
