@@ -23,7 +23,7 @@ type storeImpl struct {
 }
 
 func createDBFileIfNotExists(fileName string) error {
-	file, err := os.Create(fileName) // Create SQLite file
+	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0666) // Create SQLite file
 	if err != nil && err != os.ErrExist {
 		return nil
 	}
