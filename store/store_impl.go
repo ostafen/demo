@@ -15,7 +15,7 @@ var (
 	ErrAnswerNotExist = errors.New("no answer with the given key")
 )
 
-const dbFilename = "./db"
+const dbFilename = "./data.mysqlite"
 
 type storeImpl struct {
 	path string
