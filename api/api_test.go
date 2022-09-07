@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -46,6 +47,7 @@ func (c *TestClient) Create(answ *model.Answer) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("answer already exist")
@@ -63,6 +65,7 @@ func (c *TestClient) Update(answ *model.Answer) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("answer does not exist")
@@ -75,6 +78,7 @@ func (c *TestClient) Get(key string) (*model.Answer, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("no answer with key %s", key)
@@ -90,6 +94,7 @@ func (c *TestClient) GetHistory(key string) ([]*model.Event, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var events []*model.Event
 	err = json.NewDecoder(resp.Body).Decode(&events)
@@ -141,11 +146,14 @@ func setupServer(t *testing.T) func() {
 		}
 		require.NoError(t, err)
 	}()
+	// add a small delay to ensure the background goroutine successfully calls ListenAndServe()
+	// to prevent requests to be submitted to the server before it is started.
+	time.Sleep(time.Millisecond * 10)
 
 	return func() {
 		require.NoError(t, server.Shutdown(context.Background()))
-		os.RemoveAll(dir)
 		<-done // ensure background goroutine successfully exited
+		os.RemoveAll(dir)
 	}
 }
 
