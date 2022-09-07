@@ -174,6 +174,7 @@ func TestCreateAndGetApi(t *testing.T) {
 	_, err = c.Get("myKey1")
 	require.Error(t, err)
 
+	// we cannot create an existing key
 	err = c.Create(answ)
 	require.Error(t, err)
 }
@@ -201,9 +202,11 @@ func TestCreateUpdateAndDelete(t *testing.T) {
 	err = c.Delete("myKey")
 	require.NoError(t, err)
 
+	// a non-existing key cannot be deleted
 	err = c.Delete("myKey")
 	require.Error(t, err)
 
+	// get and updates should also fail for deleted keys
 	_, err = c.Get("myKey")
 	require.Error(t, err)
 
@@ -225,7 +228,11 @@ func TestGetHistory(t *testing.T) {
 	err = c.Update(updateAnsw)
 	require.NoError(t, err)
 
-	//TODO: Get
+	// Get events are not recorded
+	getAnsw, err := c.Get("myKey")
+	require.NoError(t, err)
+	require.Equal(t, getAnsw, updateAnsw)
+
 	err = c.Delete(updateAnsw.Key)
 	require.NoError(t, err)
 
