@@ -145,7 +145,7 @@ func (c *EventController) UpdateAnswer(ctx *gin.Context) {
 func (c *EventController) Register(engine *gin.Engine) {
 	engine.PUT("/answers", c.CreateAnswer)
 	engine.GET("/answers/:key", c.GetAnswer)
-	engine.POST("/answers/:key", c.UpdateAnswer)
+	engine.POST("/answers", c.UpdateAnswer)
 	engine.DELETE("/answers/:key", c.DeleteAnswer)
 	engine.GET("/answers/:key/events", c.GetHistory)
 }

@@ -62,7 +62,7 @@ func (c *TestClient) Update(answ *model.Answer) error {
 		return err
 	}
 
-	resp, err := http.Post(fmt.Sprintf("%s/answers/%s", c.conf.Host, answ.Key), "", bytes.NewBuffer(jsonBytes))
+	resp, err := http.Post(fmt.Sprintf("%s/answers", c.conf.Host), "application/json", bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return err
 	}
