@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
+
 	"github.com/ostafen/demo/model"
 	"github.com/ostafen/demo/store"
 
@@ -26,6 +28,12 @@ func (c *EventController) CreateAnswer(ctx *gin.Context) {
 
 	if err := ctx.BindJSON(&answ); err != nil {
 		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	v := validator.New()
+	if err := v.Struct(answ); err != nil {
+		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
@@ -126,6 +134,12 @@ func (c *EventController) UpdateAnswer(ctx *gin.Context) {
 
 	if err := ctx.BindJSON(&answ); err != nil {
 		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	v := validator.New()
+	if err := v.Struct(answ); err != nil {
+		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
