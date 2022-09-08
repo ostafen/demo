@@ -1,6 +1,6 @@
 package store
 
-import "demo/model"
+import "github.com/ostafen/demo/model"
 
 type EventStore interface {
 	Create(a *model.Answer) error

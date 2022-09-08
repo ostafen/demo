@@ -3,9 +3,6 @@ package api_test
 import (
 	"bytes"
 	"context"
-	"demo/api"
-	"demo/model"
-	"demo/store"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,6 +10,10 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/ostafen/demo/api"
+	"github.com/ostafen/demo/model"
+	"github.com/ostafen/demo/store"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"

@@ -2,10 +2,11 @@ package store
 
 import (
 	"database/sql"
-	"demo/model"
 	"errors"
 	"os"
 	"path"
+
+	"github.com/ostafen/demo/model"
 
 	_ "github.com/mattn/go-sqlite3" // Import go-sqlite3 library
 )

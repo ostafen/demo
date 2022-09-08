@@ -1,10 +1,11 @@
 package main
 
 import (
-	"demo/api"
-	"demo/store"
 	"flag"
 	"log"
+
+	"github.com/ostafen/demo/api"
+	"github.com/ostafen/demo/store"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,4 +1,4 @@
-module demo
+module github.com/ostafen/demo
 
 go 1.18
 

@@ -2,10 +2,11 @@ package api
 
 import (
 	"bufio"
-	"demo/model"
-	"demo/store"
 	"encoding/json"
 	"net/http"
+
+	"github.com/ostafen/demo/model"
+	"github.com/ostafen/demo/store"
 
 	"github.com/gin-gonic/gin"
 )

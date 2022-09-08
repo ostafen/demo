@@ -1,12 +1,13 @@
 package store_test
 
 import (
-	"demo/model"
-	"demo/store"
 	"math/rand"
 	"os"
 	"strconv"
 	"testing"
+
+	"github.com/ostafen/demo/model"
+	"github.com/ostafen/demo/store"
 
 	"github.com/stretchr/testify/require"
 )
