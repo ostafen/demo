@@ -154,6 +154,7 @@ func setupServer(t *testing.T) func() {
 	return func() {
 		require.NoError(t, server.Shutdown(context.Background()))
 		<-done // ensure background goroutine successfully exited
+		s.Close()
 		os.RemoveAll(dir)
 	}
 }

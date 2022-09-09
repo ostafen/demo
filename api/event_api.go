@@ -71,6 +71,7 @@ func (c *EventController) GetHistory(ctx *gin.Context) {
 		ctx.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
+	defer it.Close()
 
 	ctx.Header("Content-Type", "application/json")
 	if err := c.writeEvents(writer, it); err != nil {

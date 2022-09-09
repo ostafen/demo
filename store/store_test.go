@@ -21,8 +21,8 @@ func runTest(t *testing.T, testFunc func(store store.EventStore, t *testing.T)) 
 
 	testFunc(store, t)
 
-	err = os.RemoveAll(dir)
-	require.NoError(t, err)
+	require.NoError(t, store.Close())
+	require.NoError(t, os.RemoveAll(dir))
 }
 
 func TestCreateAndGetAnswer(t *testing.T) {
@@ -194,5 +194,6 @@ func TestGetHistory(t *testing.T) {
 			i++
 		}
 		require.Equal(t, i, len(evts))
+		require.NoError(t, it.Close())
 	})
 }

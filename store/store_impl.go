@@ -193,6 +193,10 @@ func (s *storeImpl) getAnswer(key string, tx *sql.Tx) (*model.Answer, error) {
 	return e.Data, err
 }
 
+func (s *storeImpl) Close() error {
+	return s.db.Close()
+}
+
 func (s *storeImpl) GetHistory(key string) (EventIterator, error) {
 	query := `SELECT * FROM event WHERE key = (?) ORDER BY id ASC`
 	rows, err := s.db.Query(query, key)
@@ -212,4 +216,8 @@ func (it *rowIterator) Next() bool {
 
 func (it *rowIterator) Value() (*model.Event, error) {
 	return scanEvent(it.rows)
+}
+
+func (it *rowIterator) Close() error {
+	return it.rows.Close()
 }
